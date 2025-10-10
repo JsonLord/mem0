@@ -34,10 +34,26 @@ class OpenAILLM(LLMBase):
 
         super().__init__(config)
 
-        self.client = OpenAI(
-            base_url="https://api.helmholtz-blablador.fz-juelich.de/v1",
-            api_key=os.environ.get("HUGGING_FACE_TOKEN"),
-        )
+        if not self.config.model:
+            self.config.model = "gpt-4o-mini"
+
+        if os.environ.get("HUGGING_FACE_TOKEN"):
+            self.client = OpenAI(
+                base_url="https://api.helmholtz-blablador.fz-juelich.de/v1",
+                api_key=os.environ.get("HUGGING_FACE_TOKEN"),
+            )
+        elif os.environ.get("OPENROUTER_API_KEY"):  # Use OpenRouter
+            self.client = OpenAI(
+                api_key=os.environ.get("OPENROUTER_API_KEY"),
+                base_url=self.config.openrouter_base_url
+                or os.getenv("OPENROUTER_API_BASE")
+                or "https://openrouter.ai/api/v1",
+            )
+        else:
+            api_key = self.config.api_key or os.getenv("OPENAI_API_KEY")
+            base_url = self.config.openai_base_url or os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+
+            self.client = OpenAI(api_key=api_key, base_url=base_url)
 
     def _parse_response(self, response, tools):
         """
@@ -92,21 +108,25 @@ class OpenAILLM(LLMBase):
         """
         params = self._get_supported_params(messages=messages, **kwargs)
 
-        model = os.getenv("MODEL")
-        if not model:
-            # Determine context size (e.g., by total characters)
-            context_size = sum(len(m.get("content", "")) for m in messages)
-            if context_size > 4000:  # Example threshold
-                model = "alias-large"
-            else:
-                model = "alias-fast"
+        if os.environ.get("HUGGING_FACE_TOKEN"):
+            model = os.getenv("MODEL")
+            if not model:
+                # Determine context size (e.g., by total characters)
+                context_size = sum(len(m.get("content", "")) for m in messages)
+                if context_size > 4000:  # Example threshold
+                    model = "alias-large"
+                else:
+                    model = "alias-fast"
 
-        params.update(
-            {
+            params.update({
                 "model": model,
                 "messages": messages,
-            }
-        )
+            })
+        else:
+            params.update({
+                "model": self.config.model,
+                "messages": messages,
+            })
 
         if os.getenv("OPENROUTER_API_KEY"):
             openrouter_params = {}
