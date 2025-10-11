@@ -36,14 +36,10 @@ HISTORY_DB_PATH = os.environ.get("HISTORY_DB_PATH", "/app/history/history.db")
 DEFAULT_CONFIG = {
     "version": "v1.1",
     "vector_store": {
-        "provider": "pgvector",
+        "provider": "chroma",
         "config": {
-            "host": POSTGRES_HOST,
-            "port": int(POSTGRES_PORT),
-            "dbname": POSTGRES_DB,
-            "user": POSTGRES_USER,
-            "password": POSTGRES_PASSWORD,
-            "collection_name": POSTGRES_COLLECTION_NAME,
+            "path": "/code/chroma_db",
+            "collection_name": "memories",
         },
     },
     "graph_store": {
@@ -54,6 +50,12 @@ DEFAULT_CONFIG = {
     "embedder": {"provider": "openai", "config": {"api_key": OPENAI_API_KEY, "model": "text-embedding-3-small"}},
     "history_db_path": HISTORY_DB_PATH,
 }
+
+if "HUGGING_FACE_TOKEN" in os.environ:
+    DEFAULT_CONFIG["llm"]["config"]["api_key"] = os.environ["HUGGING_FACE_TOKEN"]
+    DEFAULT_CONFIG["llm"]["config"]["base_url"] = "https://api.helmholtz-blablador.fz-juelich.de/v1"
+    DEFAULT_CONFIG["embedder"]["config"]["api_key"] = os.environ["HUGGING_FACE_TOKEN"]
+    DEFAULT_CONFIG["embedder"]["config"]["base_url"] = "https://api.helmholtz-blablador.fz-juelich.de/v1"
 
 
 MEMORY_INSTANCE = Memory.from_config(DEFAULT_CONFIG)
