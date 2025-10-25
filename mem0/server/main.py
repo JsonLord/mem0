@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from app.config import DEFAULT_APP_ID, USER_ID
 from app.database import Base, SessionLocal, engine
-from app.mcp_server import mcp
+from app.mcp_server import setup_mcp_server
 from app.models import App, User
 from app.routers import apps_router, backup_router, config_router, memories_router, stats_router
 from fastapi import FastAPI
@@ -75,8 +75,8 @@ def create_default_app():
 create_default_user()
 create_default_app()
 
-# Mount MCP server
-app.mount("/mcp", mcp.sse_app())
+# Setup MCP server
+setup_mcp_server(app)
 
 # Include routers
 app.include_router(memories_router)
