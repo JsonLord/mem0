@@ -90,15 +90,17 @@ pythonpath = ["."]
 [tool.hatch.build]
 include = [
     "mem0/**/*.py",
+    "openmemory/**/*.py",
 ]
 exclude = [
     "**/*",
     "!mem0/**/*.py",
+    "!openmemory/**/*.py",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["mem0"]
-only-include = ["mem0"]
+packages = ["mem0", "openmemory"]
+only-include = ["mem0", "openmemory"]
 
 [tool.hatch.build.targets.wheel.shared-data]
 "README.md" = "README.md"
